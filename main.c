@@ -16,11 +16,6 @@ GLdouble _ortho_z_min,_ortho_z_max;         /*Variables for the control of the o
 object3d * _first_object= 0;                /*List of objects*/
 object3d * _selected_object = 0;            /*Object currently selected*/
 
-GLfloat indentity[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
-GLfloat translation[16];
-GLfloat rotation[16];
-GLfloat scalation[16];
-
 /** GENERAL INITIALIZATION **/
 void initialization (){
 
@@ -59,6 +54,7 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
+    glutSpecialFunc(specialKeyboard);
 
     /* this initialization has to be AFTER the creation of the window */
     initialization();

@@ -13,15 +13,9 @@ extern GLdouble _ortho_x_min,_ortho_x_max;
 extern GLdouble _ortho_y_min,_ortho_y_max;
 extern GLdouble _ortho_z_min,_ortho_z_max;
 
-extern GLfloat indentity[16];
-extern GLfloat translation[16];
-extern GLfloat rotation[16];
-extern GLfloat scalation[16];
-
 char trasnformationMode[] = {0, 0, 0};
-char trasnformationActive = 0;
-char referenceSystem = 0;
-char transformationType = 1;
+char referenceSystem = SYS_REF_LOCAL;
+char transformationType = OBJECT_TRANS;
 
 /*
 TrasformationMOde --> Modo de transformación:
@@ -32,17 +26,16 @@ TrasformationMOde --> Modo de transformación:
 
 ReferenceSystem --> Sistema de referenica:
 
-1 byte:
-    0 : Sin refferencia //Error
-    1 : Mundo
-    2 : Local del Objeto
+1 byte: //Defecto: Local
+    SYS_REF_GLOBAL : Mundo
+    SYS_REF_LOCAL : Local del Objeto
 
 TransformationType --> Elemento a transformar:
-
+//Defecto: Objeto
     1 byte:
-        1 : Objeto
-        2 : Camara
-        3 : Luz 
+        OBJECT_TRANS : Objeto
+        CAMERA_TRANS : Camara
+        LIGHT_TRANS : Luz 
 */
 
 void imprimir_estado_transformaciones() {
@@ -103,16 +96,10 @@ void liberar(object3d *optr)
 
 void enlazar_matriz(object3d *optr)
 {
-    GLfloat model[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, model);
-    matrix_list *matptr = malloc(sizeof(matrix_list));
-    int i;
-    for(i=0; i<16; i++)
-    {
-        matptr->modelview[i] = model[i]; 
-    }
-    matptr->next = optr->matrix_list;
-    optr->matrix_list = matptr;
+    modelviewElem *newModelView = malloc(sizeof(modelviewElem));
+    glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
+    newModelView->next = optr->matrix_list;
+    optr->matrix_list = newModelView;
 }
 
 //glGetFloat(GL_MODEL_VIEW_MATRIX, *puntero_en_donde_guardar)
@@ -269,36 +256,32 @@ void keyboard(unsigned char key, int x, int y) {
 
     case 'g':
     case 'G':
-        referenceSystem = 1;
+        referenceSystem = SYS_REF_GLOBAL;
         printf("Sistema de referencia: Mundo\n\n");
         break;
 
     case 'l':
     case 'L':
-        referenceSystem = 2;
+        referenceSystem = SYS_REF_LOCAL;
         printf("Sistema de referencia: Local\n\n");
         break;
 
     case 'o':
     case 'O':
-        transformationType = 1;
+        transformationType = OBJECT_TRANS;
         printf("Aplicar transformacion a: Objeto\n\n");
         break;
 
     case 'k':
     case 'K':
-        transformationType = 2;
+        transformationType = CAMERA_TRANS;
         printf("Aplicar transformacion a: Camara\n\n");
         break;
 
     case 'a':
     case 'A':
-        transformationType = 3;
+        transformationType = LIGHT_TRANS;
         printf("Aplicar transformacion a: Luz\n\n");
-        break;
-
-    case 72:
-        printf("Hola\n");
         break;
 
     case '?':
@@ -315,6 +298,51 @@ void keyboard(unsigned char key, int x, int y) {
         printf("%d %c\n", key, key);
     }
     /*In case we have do any modification affecting the displaying of the object, we redraw them*/
+    glutPostRedisplay();
+}
+
+void specialKeyboard(int key, int x, int y)
+{
+    glMatrixMode(GL_MODELVIEW);
+    switch(key){
+    case GLUT_KEY_UP:
+        if(referenceSystem == SYS_REF_LOCAL)
+        {
+            glLoadMatrix(_selected_object->matrix_list->modelview)
+        } else {
+            glLoadIdentity()
+        }
+        break;
+
+    case GLUT_KEY_DOWN:
+        if(referenceSystem == SYS_REF_LOCAL)
+        {
+            glLoadMatrix(_selected_object->matrix_list->modelview)
+        } else {
+            glLoadIdentity()
+        }
+        break;
+    
+    case GLUT_KEY_LEFT:
+        if(referenceSystem == SYS_REF_LOCAL)
+        {
+            glLoadMatrix(_selected_object->matrix_list->modelview)
+        } else {
+            glLoadIdentity()
+        }
+        break;
+    
+    case GLUT_KEY_RIGHT:
+        if(referenceSystem == SYS_REF_LOCAL)
+        {
+            glLoadMatrix(_selected_object->matrix_list->modelview)
+        } else {
+            glLoadIdentity()
+        }
+        break;
+    default:
+        break;
+    }
     glutPostRedisplay();
 }
 

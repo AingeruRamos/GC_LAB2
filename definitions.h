@@ -56,6 +56,13 @@
 
 #define KG_MAX_DOUBLE                       10E25
 
+#define SYS_REF_GLOBAL                      1
+#define SYS_REF_LOCAL                       2
+
+#define OBJECT_TRANS                        1
+#define CAMERA_TRANS                        2
+#define LIGHT_TRANS                         3
+
 /** STRUCTURES **/
 
 /****************************
@@ -106,12 +113,12 @@ typedef struct {
  * objects' proyection      *
  * matrixes                 *
  ****************************/
-struct matrix_list{
+struct modelviewElem{
     GLfloat modelview[16];
-    struct matrix_list *next;
+    struct modelviewElem *next;
 };
 
-typedef struct matrix_list matrix_list;
+typedef struct modelviewElem modelviewElem;
 
 /****************************
  * Structure to store a     *
@@ -122,7 +129,7 @@ struct object3d{
     vertex *vertex_table;               /* table of vertices */
     GLint num_faces;                    /* number of faces in the object */
     face *face_table;                   /* table of faces */
-    matrix_list *matrix_list;               /* table of matrixes */
+    modelviewElem *matrix_list;               /* table of matrixes */
     point3 min;                         /* coordinates' lower bounds */
     point3 max;                         /* coordinates' bigger bounds */
     struct object3d *next;              /* next element in the pile of objects */
