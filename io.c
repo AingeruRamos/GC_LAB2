@@ -42,23 +42,23 @@ void imprimir_estado_transformaciones() {
     char str[70];
     if(trasnformationMode[0] == 1)
     {
-        strcpy(str, "Translacion: Activa\n");
+        strcpy(str, "Trans: ON, ");
     } else {
-        strcpy(str, "Translacion: Desactiva\n");
+        strcpy(str, "Trans: OFF, ");
     }
 
     if(trasnformationMode[1] == 1)
     {
-        strcat(str, "Rotacion: Activa\n");
+        strcat(str, "Rot: ON, ");
     } else {
-        strcat(str, "Rotacion: Desactiva\n");
+        strcat(str, "Rot: OFF, ");
     }
 
     if(trasnformationMode[2] == 1)
     {
-        strcat(str, "Escalado: Activa\n");
+        strcat(str, "Scal: ON\n");
     } else {
-        strcat(str, "Escalado: Desactiva\n");
+        strcat(str, "Scal: OFF\n");
     }
     printf("%s\n", str);
 }
@@ -100,6 +100,69 @@ void enlazar_matriz(object3d *optr)
     glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
     newModelView->next = optr->matrix_list;
     optr->matrix_list = newModelView;
+}
+
+void aplicateTransformations(int key)
+{
+    float xTrans = 0;
+    float yTrans = 0;
+    float zTrans = 0;
+
+    float xRot = 0;
+    float yRot = 0;
+    float zRot = 0;
+
+    float xScal = 1;
+    float yScal = 1;
+    float zScal = 1;
+
+    if(key == GLUT_KEY_UP) //Trasladar +Y; Escalar + Y; Rotar +X
+    {
+        yTrans = KG_STEP_MOVE;
+        xRot = 1;
+        yScal = 2;
+    } else if(key == GLUT_KEY_DOWN) { //Trasladar -Y; Escalar - Y; Rotar -X
+        yTrans = -1*KG_STEP_MOVE;
+        xRot = -1;
+        yScal = 0.5;
+    } else if(key == GLUT_KEY_RIGHT) { //Trasladar +X; Escalar + X; Rotar +Y
+        xTrans = KG_STEP_MOVE;
+        yRot = 1;
+        xScal = 2;
+    } else if(key == GLUT_KEY_LEFT) { //Trasladar -X; Escalar - X; Rotar -Y
+        xTrans = -1*KG_STEP_MOVE;
+        yRot = -1;
+        xScal = 0.5;
+    } else if(key == GLUT_KEY_PAGE_UP) { //Trasladar +Z; Escalar + Z; Rotar +Z
+        zTrans = KG_STEP_MOVE;
+        zRot = 1;
+        zScal = 2;
+    } else if(key == GLUT_KEY_PAGE_DOWN) { //Trasladar -Z; Escalar - Z; Rotar -Z
+        zTrans = -1*KG_STEP_MOVE;
+        zRot = -1;
+        zScal = 0.5;
+    } else if(key == '+') {
+        xScal = 2;
+        yScal = 2;
+        zScal = 2;
+    } else if(key == '-') {
+        xScal = 0.5;
+        yScal = 0.5;
+        zScal = 0.5;
+    }
+
+    if(trasnformationMode[0] == 1)
+    {
+        glTranslatef(xTrans, yTrans, zTrans);
+    }
+    if(trasnformationMode[1] == 1)
+    {
+        glRotatef(KG_STEP_ROTATE, xRot, yRot, zRot); 
+    }
+    if(trasnformationMode[2] == 1)
+    {
+        glScalef(xScal, yScal, zScal);
+    }
 }
 
 //glGetFloat(GL_MODEL_VIEW_MATRIX, *puntero_en_donde_guardar)
@@ -200,6 +263,21 @@ void keyboard(unsigned char key, int x, int y) {
             _ortho_x_min = midx - wd/2;
             _ortho_y_max = midy + he/2;
             _ortho_y_min = midy - he/2;
+        } else{
+            glMatrixMode(GL_MODELVIEW);
+            if(referenceSystem == SYS_REF_LOCAL)
+            {
+                glLoadMatrixf(_selected_object->matrix_list->modelview);
+                aplicateTransformations(key);
+            } else {
+                glLoadIdentity();
+                aplicateTransformations(key);
+                glMultMatrixf(_selected_object->matrix_list->modelview);
+            }
+            modelviewElem *newModelView = malloc(sizeof(modelviewElem));
+            glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
+            newModelView->next = _selected_object->matrix_list;
+            _selected_object->matrix_list = newModelView;
         }
         break;
 
@@ -218,6 +296,21 @@ void keyboard(unsigned char key, int x, int y) {
             _ortho_x_min = midx - wd/2;
             _ortho_y_max = midy + he/2;
             _ortho_y_min = midy - he/2;
+        } else {
+            glMatrixMode(GL_MODELVIEW);
+            if(referenceSystem == SYS_REF_LOCAL)
+            {
+                glLoadMatrixf(_selected_object->matrix_list->modelview);
+                aplicateTransformations(key);
+            } else {
+                glLoadIdentity();
+                aplicateTransformations(key);
+                glMultMatrixf(_selected_object->matrix_list->modelview);
+            }
+            modelviewElem *newModelView = malloc(sizeof(modelviewElem));
+            glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
+            newModelView->next = _selected_object->matrix_list;
+            _selected_object->matrix_list = newModelView;
         }
         break;
 
@@ -293,6 +386,14 @@ void keyboard(unsigned char key, int x, int y) {
         exit(0);
         break;
 
+    case 'z':
+    case 'Z':
+        if(_selected_object->matrix_list->next != MURPHY)
+        {
+            _selected_object->matrix_list = _selected_object->matrix_list->next;
+        };
+        break;
+
     default:
         /*In the default case we just print the code of the key. This is usefull to define new cases*/
         printf("%d %c\n", key, key);
@@ -304,45 +405,20 @@ void keyboard(unsigned char key, int x, int y) {
 void specialKeyboard(int key, int x, int y)
 {
     glMatrixMode(GL_MODELVIEW);
-    switch(key){
-    case GLUT_KEY_UP:
-        if(referenceSystem == SYS_REF_LOCAL)
-        {
-            glLoadMatrix(_selected_object->matrix_list->modelview)
-        } else {
-            glLoadIdentity()
-        }
-        break;
-
-    case GLUT_KEY_DOWN:
-        if(referenceSystem == SYS_REF_LOCAL)
-        {
-            glLoadMatrix(_selected_object->matrix_list->modelview)
-        } else {
-            glLoadIdentity()
-        }
-        break;
-    
-    case GLUT_KEY_LEFT:
-        if(referenceSystem == SYS_REF_LOCAL)
-        {
-            glLoadMatrix(_selected_object->matrix_list->modelview)
-        } else {
-            glLoadIdentity()
-        }
-        break;
-    
-    case GLUT_KEY_RIGHT:
-        if(referenceSystem == SYS_REF_LOCAL)
-        {
-            glLoadMatrix(_selected_object->matrix_list->modelview)
-        } else {
-            glLoadIdentity()
-        }
-        break;
-    default:
-        break;
+    if(referenceSystem == SYS_REF_LOCAL)
+    {
+        glLoadMatrixf(_selected_object->matrix_list->modelview);
+        aplicateTransformations(key);
+    } else {
+        glLoadIdentity();
+        aplicateTransformations(key);
+        glMultMatrixf(_selected_object->matrix_list->modelview);
     }
+    modelviewElem *newModelView = malloc(sizeof(modelviewElem));
+    glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
+    newModelView->next = _selected_object->matrix_list;
+    _selected_object->matrix_list = newModelView;
+
     glutPostRedisplay();
 }
 

@@ -63,6 +63,8 @@
 #define CAMERA_TRANS                        2
 #define LIGHT_TRANS                         3
 
+#define MURPHY                              NULL
+
 /** STRUCTURES **/
 
 /****************************
