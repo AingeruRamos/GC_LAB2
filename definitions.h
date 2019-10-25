@@ -15,7 +15,7 @@
 #define KG_MSSG_FILENOTFOUND                "Fitxategi hori ez da existitzen!!"
 #define KG_MSSG_INVALIDFILE                 "Arazoren bat egon da fitxategiarekin ..."
 #define KG_MSSG_EMPTYFILE                   "Fitxategia hutsik dago"
-#define KG_MSSG_FILEREAD                    "Fitxategiaren irakurketa buruta"
+#define KG_MSSG_FILEREAD                    "Fitxategiaren irakurketa buruta\n"
 
 #define KG_STEP_MOVE                        5.0f
 #define KG_STEP_ROTATE                      10.0f
@@ -55,6 +55,11 @@
 #define KG_COL_Z_AXIS_B                     1.0f
 
 #define KG_MAX_DOUBLE                       10E25
+
+#define TRANS_NULL                          0
+#define TRANS_TRASLATE                      1
+#define TRANS_ROTATE                        2
+#define TRANS_SCALE                         3
 
 #define SYS_REF_GLOBAL                      1
 #define SYS_REF_LOCAL                       2

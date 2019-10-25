@@ -29,7 +29,7 @@ static int sreadint2(char * lerroa, int * zenbakiak) {
 	while ((*s != ' ')&&(*s !='\0')) s++;  // jump vector normal information
         zenbakiak[kont++] = zbk;
     }
-printf("%d numbers in the line\n",kont);
+//printf("%d numbers in the line\n",kont);
     return (kont);
 }
 /**
@@ -85,7 +85,7 @@ int read_wavefront(char * file_name, object3d * object_ptr) {
         }
     }
     fclose(obj_file);
-printf("1 pasada: num vert = %d (%d), num faces = %d(%d) \n",num_vertices,count_vertices,num_faces,count_faces);
+printf("1 pasada: num vert = %d (%d), num faces = %d(%d)\n",num_vertices,count_vertices,num_faces,count_faces);
     if ((num_vertices != -1 && num_vertices != count_vertices) || (num_faces != -1 && num_faces != count_faces)) {
         printf("WARNING: full file format: (%s)\n", file_name);
         //return (2);
@@ -146,7 +146,7 @@ printf("1 pasada: num vert = %d (%d), num faces = %d(%d) \n",num_vertices,count_
 
     fclose(obj_file);
 
-printf("2 pasada\n");
+//printf("2 pasada\n");
 
     /*
      * Information read is introduced in the structure */

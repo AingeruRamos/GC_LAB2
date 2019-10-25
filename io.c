@@ -13,54 +13,48 @@ extern GLdouble _ortho_x_min,_ortho_x_max;
 extern GLdouble _ortho_y_min,_ortho_y_max;
 extern GLdouble _ortho_z_min,_ortho_z_max;
 
-char trasnformationMode[] = {0, 0, 0};
+char transformationType = TRANS_NULL;
 char referenceSystem = SYS_REF_LOCAL;
-char transformationType = OBJECT_TRANS;
+char applyTransTo = OBJECT_TRANS;
+char printed = 0;
 
-/*
-TrasformationMOde --> Modo de transformación:
-
-1 byte / 3 primero bit
-        T   R   E
-00000   0   0   0
-
-ReferenceSystem --> Sistema de referenica:
-
-1 byte: //Defecto: Local
-    SYS_REF_GLOBAL : Mundo
-    SYS_REF_LOCAL : Local del Objeto
-
-TransformationType --> Elemento a transformar:
-//Defecto: Objeto
-    1 byte:
-        OBJECT_TRANS : Objeto
-        CAMERA_TRANS : Camara
-        LIGHT_TRANS : Luz 
-*/
-
-void imprimir_estado_transformaciones() {
-    char str[70];
-    if(trasnformationMode[0] == 1)
+void imprimir_configuracion() {
+    if(printed == 1)
     {
-        strcpy(str, "Trans: ON, ");
-    } else {
-        strcpy(str, "Trans: OFF, ");
+        int i;
+        for(i = 0; i <= 4; i++)
+        {
+            printf("\033[1A"); // Move up X line
+            printf("\33[2K"); //Erase the current line
+        }
     }
-
-    if(trasnformationMode[1] == 1)
+    printf("--------------------------------------\n");
+    if(referenceSystem == SYS_REF_LOCAL)
     {
-        strcat(str, "Rot: ON, ");
+        printf("Sistema de Referencia: Local\n");
     } else {
-        strcat(str, "Rot: OFF, ");
+        printf("Sistema de Referencia: Global\n");
     }
-
-    if(trasnformationMode[2] == 1)
+    if(transformationType == TRANS_TRASLATE)
     {
-        strcat(str, "Scal: ON\n");
+        printf("Tipo Transformacion: Translacion\n");;
+    } else if(transformationType == TRANS_ROTATE) {
+        printf("Tipo Transformacion: Rotacion\n");
+    } else if(transformationType == TRANS_SCALE) {
+        printf("Tipo Transformacion: Escalado\n");
     } else {
-        strcat(str, "Scal: OFF\n");
+        printf("Tipo Transformacion: Ninguno\n");
     }
-    printf("%s\n", str);
+    if(applyTransTo == OBJECT_TRANS)
+    {
+        printf("Aplicar a: Objeto\n");
+    } else if(applyTransTo == CAMERA_TRANS) {
+        printf("Aplicar a: Camara\n");
+    } else {
+        printf("Aplicar a: Luz\n");
+    }
+    printf("--------------------------------------\n");
+    printed = 1;
 }
 
 /**
@@ -150,17 +144,12 @@ void aplicateTransformations(int key)
         yScal = 0.5;
         zScal = 0.5;
     }
-
-    if(trasnformationMode[0] == 1)
+    if(transformationType == TRANS_TRASLATE)
     {
-        glTranslatef(xTrans, yTrans, zTrans);
-    }
-    if(trasnformationMode[1] == 1)
-    {
+        glTranslatef(xTrans, yTrans, zTrans); 
+    } else if(transformationType == TRANS_ROTATE) {
         glRotatef(KG_STEP_ROTATE, xRot, yRot, zRot); 
-    }
-    if(trasnformationMode[2] == 1)
-    {
+    } else if(transformationType == TRANS_SCALE) {
         glScalef(xScal, yScal, zScal);
     }
 }
@@ -212,6 +201,8 @@ void keyboard(unsigned char key, int x, int y) {
             printf("%s\n",KG_MSSG_FILEREAD);
             break;
         }
+        printed = 0;
+        imprimir_configuracion();
         break;
 
     case 9: /* <TAB> */
@@ -223,7 +214,6 @@ void keyboard(unsigned char key, int x, int y) {
     case 127: /* <SUPR> */
         if(_first_object == 0)
         {
-            printf("No cuela\n");
             break;
         }
         /*Erasing an object depends on whether it is the first one or not*/
@@ -316,65 +306,50 @@ void keyboard(unsigned char key, int x, int y) {
 
     case 'm':
     case 'M':
-        if(trasnformationMode[0] == 1)
-        {
-            trasnformationMode[0] = 0;
-        } else {
-            trasnformationMode[0] = 1;
-        }
-        imprimir_estado_transformaciones();
+        transformationType = TRANS_TRASLATE;
+        imprimir_configuracion();
         break;
 
     case 'b':
     case 'B':
-        if(trasnformationMode[1] == 1)
-        {
-            trasnformationMode[1] = 0;
-        } else {
-            trasnformationMode[1] = 1;
-        }
-        imprimir_estado_transformaciones();
+        transformationType = TRANS_ROTATE;
+        imprimir_configuracion();
         break;
 
     case 't':
     case 'T':
-        if(trasnformationMode[2] == 1)
-        {
-            trasnformationMode[2] = 0;
-        } else {
-            trasnformationMode[2] = 1;
-        }
-        imprimir_estado_transformaciones();
+        transformationType = TRANS_SCALE;
+        imprimir_configuracion();
         break;
 
     case 'g':
     case 'G':
         referenceSystem = SYS_REF_GLOBAL;
-        printf("Sistema de referencia: Mundo\n\n");
+        imprimir_configuracion();
         break;
 
     case 'l':
     case 'L':
         referenceSystem = SYS_REF_LOCAL;
-        printf("Sistema de referencia: Local\n\n");
+        imprimir_configuracion();
         break;
 
     case 'o':
     case 'O':
-        transformationType = OBJECT_TRANS;
-        printf("Aplicar transformacion a: Objeto\n\n");
+        applyTransTo = OBJECT_TRANS;
+        imprimir_configuracion();
         break;
 
     case 'k':
     case 'K':
-        transformationType = CAMERA_TRANS;
-        printf("Aplicar transformacion a: Camara\n\n");
+        applyTransTo = CAMERA_TRANS;
+        imprimir_configuracion();
         break;
 
     case 'a':
     case 'A':
-        transformationType = LIGHT_TRANS;
-        printf("Aplicar transformacion a: Luz\n\n");
+        applyTransTo = LIGHT_TRANS;
+        imprimir_configuracion();
         break;
 
     case '?':
@@ -388,15 +363,19 @@ void keyboard(unsigned char key, int x, int y) {
 
     case 'z':
     case 'Z':
-        if(_selected_object->matrix_list->next != MURPHY)
+        if(_selected_object != MURPHY)
         {
-            _selected_object->matrix_list = _selected_object->matrix_list->next;
-        };
+            if(_selected_object->matrix_list->next != MURPHY)
+            {
+                _selected_object->matrix_list = _selected_object->matrix_list->next;
+            }
+        }
         break;
 
     default:
         /*In the default case we just print the code of the key. This is usefull to define new cases*/
         printf("%d %c\n", key, key);
+        printed = 0;
     }
     /*In case we have do any modification affecting the displaying of the object, we redraw them*/
     glutPostRedisplay();

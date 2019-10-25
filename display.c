@@ -85,14 +85,14 @@ void display(void) {
 
     /* Now we start drawing the object */
     glMatrixMode(GL_MODELVIEW);
-    //glLoadIdentity();
+    glLoadIdentity();
 
     /*First, we draw the axes*/
     draw_axes();
 
     /*Now each of the objects in the list*/
     while (aux_obj != 0) {
-        glLoadMatrixf(_selected_object->matrix_list->modelview);
+        glLoadMatrixf(aux_obj->matrix_list->modelview);
         /* Select the color, depending on whether the current object is the selected one or not */
         if (aux_obj == _selected_object){
             glColor3f(KG_COL_SELECTED_R,KG_COL_SELECTED_G,KG_COL_SELECTED_B);
