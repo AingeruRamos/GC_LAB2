@@ -83,6 +83,7 @@ void liberar(object3d *optr)
     {
         free(optr->face_table[i].vertex_table);
     }
+    free(optr->matrix_list);
     free(optr->face_table);
     free(optr->vertex_table);
     free(optr);
@@ -199,10 +200,10 @@ void keyboard(unsigned char key, int x, int y) {
             glLoadIdentity();
             enlazar_matriz(_selected_object);
             printf("%s\n",KG_MSSG_FILEREAD);
+            printed = 0;
+            imprimir_configuracion();
             break;
         }
-        printed = 0;
-        imprimir_configuracion();
         break;
 
     case 9: /* <TAB> */
@@ -264,10 +265,7 @@ void keyboard(unsigned char key, int x, int y) {
                 aplicateTransformations(key);
                 glMultMatrixf(_selected_object->matrix_list->modelview);
             }
-            modelviewElem *newModelView = malloc(sizeof(modelviewElem));
-            glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
-            newModelView->next = _selected_object->matrix_list;
-            _selected_object->matrix_list = newModelView;
+            enlazar_matriz(_selected_object);
         }
         break;
 
@@ -297,10 +295,7 @@ void keyboard(unsigned char key, int x, int y) {
                 aplicateTransformations(key);
                 glMultMatrixf(_selected_object->matrix_list->modelview);
             }
-            modelviewElem *newModelView = malloc(sizeof(modelviewElem));
-            glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
-            newModelView->next = _selected_object->matrix_list;
-            _selected_object->matrix_list = newModelView;
+            enlazar_matriz(_selected_object);
         }
         break;
 
@@ -367,7 +362,10 @@ void keyboard(unsigned char key, int x, int y) {
         {
             if(_selected_object->matrix_list->next != MURPHY)
             {
-                _selected_object->matrix_list = _selected_object->matrix_list->next;
+                modelviewElem *aux =_selected_object->matrix_list;
+                _selected_object->matrix_list = aux->next;
+
+                free(aux);
             }
         }
         break;
@@ -393,10 +391,7 @@ void specialKeyboard(int key, int x, int y)
         aplicateTransformations(key);
         glMultMatrixf(_selected_object->matrix_list->modelview);
     }
-    modelviewElem *newModelView = malloc(sizeof(modelviewElem));
-    glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
-    newModelView->next = _selected_object->matrix_list;
-    _selected_object->matrix_list = newModelView;
+    enlazar_matriz(_selected_object);
 
     glutPostRedisplay();
 }
