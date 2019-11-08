@@ -12,6 +12,8 @@ extern GLdouble _ortho_z_min,_ortho_z_max;
 
 extern object3d *_first_object;
 extern object3d *_selected_object;
+extern camera *_cameras;
+extern camera *_selected_camera;
 
 /**
  * @brief Function to draw the axes
@@ -93,6 +95,7 @@ void display(void) {
     /*Now each of the objects in the list*/
     while (aux_obj != 0) {
         glLoadMatrixf(aux_obj->matrix_list->modelview);
+        glMultMatrixf(_selected_camera->camera_matrix.modelview);
         /* Select the color, depending on whether the current object is the selected one or not */
         if (aux_obj == _selected_object){
             glColor3f(KG_COL_SELECTED_R,KG_COL_SELECTED_G,KG_COL_SELECTED_B);

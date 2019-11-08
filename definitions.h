@@ -120,12 +120,12 @@ typedef struct {
  * objects' proyection      *
  * matrixes                 *
  ****************************/
-struct modelviewElem{
+struct matrix4{
     GLfloat modelview[16];
-    struct modelviewElem *next;
+    struct matrix4 *next;
 };
 
-typedef struct modelviewElem modelviewElem;
+typedef struct matrix4 matrix4;
 
 /****************************
  * Structure to store a     *
@@ -136,12 +136,19 @@ struct object3d{
     vertex *vertex_table;               /* table of vertices */
     GLint num_faces;                    /* number of faces in the object */
     face *face_table;                   /* table of faces */
-    modelviewElem *matrix_list;               /* table of matrixes */
+    matrix4 *matrix_list;               /* table of matrixes */
     point3 min;                         /* coordinates' lower bounds */
     point3 max;                         /* coordinates' bigger bounds */
     struct object3d *next;              /* next element in the pile of objects */
 };
 
 typedef struct object3d object3d;
+
+struct camera{
+    matrix4 camera_matrix; /* List of cameras */
+    struct camera *next;
+};
+
+typedef struct camera camera;
 
 #endif // DEFINITIONS_H

@@ -8,6 +8,8 @@
 
 extern object3d * _first_object;
 extern object3d * _selected_object;
+extern camera *_cameras;
+extern camera *_selected_camera;
 
 extern GLdouble _ortho_x_min,_ortho_x_max;
 extern GLdouble _ortho_y_min,_ortho_y_max;
@@ -91,7 +93,7 @@ void liberar(object3d *optr)
 
 void enlazar_matriz(object3d *optr)
 {
-    modelviewElem *newModelView = malloc(sizeof(modelviewElem));
+    matrix4 *newModelView = malloc(sizeof(matrix4));
     glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
     newModelView->next = optr->matrix_list;
     optr->matrix_list = newModelView;
@@ -299,6 +301,31 @@ void keyboard(unsigned char key, int x, int y) {
         }
         break;
 
+    case 'n':
+    case 'N':
+        printf("Posicion de la camara:\n");
+        float xe;
+        printf("\tx: "); scanf("%f", &xe);
+        float ye;
+        printf("\ty: "); scanf("%f", &ye);
+        float ze;
+        printf("\tz: "); scanf("%f", &ze);
+        printf("Posicion de la vista:\n");
+        float xat;
+        printf("\tx: "); scanf("%f", &xat);
+        float yat;
+        printf("\ty: "); scanf("%f", &yat);
+        float zat;
+        printf("\tz: "); scanf("%f", &zat);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        gluLookAt(xe, ye, ze, xat, yat, zat, 0.0, 1.0, 0.0);
+        camera *newCamera = malloc(sizeof(camera));
+        glGetFloatv(GL_MODELVIEW_MATRIX, newCamera->camera_matrix.modelview);
+        newCamera->next = _cameras;
+        _cameras = newCamera;
+        _selected_camera = newCamera;
+        break;
     case 'm':
     case 'M':
         transformationType = TRANS_TRASLATE;
@@ -362,7 +389,7 @@ void keyboard(unsigned char key, int x, int y) {
         {
             if(_selected_object->matrix_list->next != MURPHY)
             {
-                modelviewElem *aux =_selected_object->matrix_list;
+                matrix4 *aux =_selected_object->matrix_list;
                 _selected_object->matrix_list = aux->next;
 
                 free(aux);

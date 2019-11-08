@@ -15,6 +15,8 @@ GLdouble _ortho_z_min,_ortho_z_max;         /*Variables for the control of the o
 
 object3d * _first_object= 0;                /*List of objects*/
 object3d * _selected_object = 0;            /*Object currently selected*/
+camera * _cameras = 0;
+camera *_selected_camera = 0;
 
 /** GENERAL INITIALIZATION **/
 void initialization (){
@@ -34,6 +36,15 @@ void initialization (){
 
     /*Definition of the method to draw the objects*/
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    /*Inizialize camera */
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    camera *newCamera = malloc(sizeof(camera));
+    glGetFloatv(GL_MODELVIEW_MATRIX, newCamera->camera_matrix.modelview);
+    _cameras = newCamera;
+    _selected_camera = _cameras;
 }
 
 
