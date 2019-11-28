@@ -40,13 +40,14 @@ void initialization (){
     /*Inizialize camera */
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    gluLookAt(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     camera *newCamera = malloc(sizeof(camera));
-    glGetFloatv(GL_MODELVIEW_MATRIX, newCamera->camera_matrix.modelview);
+    modelview *newModelView = malloc(sizeof(modelview));
+    glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->value);
+    newCamera->camera_matrix_list = newModelView;
     _cameras = newCamera;
     _selected_camera = _cameras;
 }
-
 
 /** MAIN FUNCTION **/
 int main(int argc, char** argv) {

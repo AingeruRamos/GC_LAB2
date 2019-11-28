@@ -85,18 +85,26 @@ void liberar(object3d *optr)
     {
         free(optr->face_table[i].vertex_table);
     }
-    free(optr->matrix_list);
+    free(optr->modelview_list);
     free(optr->face_table);
     free(optr->vertex_table);
     free(optr);
 }
 
-void enlazar_matriz(object3d *optr)
+void enlazar_matriz_objeto(object3d *optr)
 {
-    matrix4 *newModelView = malloc(sizeof(matrix4));
-    glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->modelview);
-    newModelView->next = optr->matrix_list;
-    optr->matrix_list = newModelView;
+    modelview *newModelView = malloc(sizeof(modelview));
+    glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->value);
+    newModelView->next = optr->modelview_list;
+    optr->modelview_list = newModelView;
+}
+
+void enlazar_matriz_camara(camera *cam)
+{
+    modelview *newModelView = malloc(sizeof(modelview));
+    glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->value);
+    newModelView->next = cam->camera_matrix_list;
+    cam->camera_matrix_list = newModelView;
 }
 
 void aplicateTransformations(int key)
@@ -200,7 +208,7 @@ void keyboard(unsigned char key, int x, int y) {
             _selected_object = _first_object;
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
-            enlazar_matriz(_selected_object);
+            enlazar_matriz_objeto(_selected_object);
             printf("%s\n",KG_MSSG_FILEREAD);
             printed = 0;
             imprimir_configuracion();
@@ -260,14 +268,14 @@ void keyboard(unsigned char key, int x, int y) {
             glMatrixMode(GL_MODELVIEW);
             if(referenceSystem == SYS_REF_LOCAL)
             {
-                glLoadMatrixf(_selected_object->matrix_list->modelview);
+                glLoadMatrixf(_selected_object->modelview_list->value);
                 aplicateTransformations(key);
             } else {
                 glLoadIdentity();
                 aplicateTransformations(key);
-                glMultMatrixf(_selected_object->matrix_list->modelview);
+                glMultMatrixf(_selected_object->modelview_list->value);
             }
-            enlazar_matriz(_selected_object);
+            enlazar_matriz_objeto(_selected_object);
         }
         break;
 
@@ -290,14 +298,14 @@ void keyboard(unsigned char key, int x, int y) {
             glMatrixMode(GL_MODELVIEW);
             if(referenceSystem == SYS_REF_LOCAL)
             {
-                glLoadMatrixf(_selected_object->matrix_list->modelview);
+                glLoadMatrixf(_selected_object->modelview_list->value);
                 aplicateTransformations(key);
             } else {
                 glLoadIdentity();
                 aplicateTransformations(key);
-                glMultMatrixf(_selected_object->matrix_list->modelview);
+                glMultMatrixf(_selected_object->modelview_list->value);
             }
-            enlazar_matriz(_selected_object);
+            enlazar_matriz_objeto(_selected_object);
         }
         break;
 
@@ -320,12 +328,15 @@ void keyboard(unsigned char key, int x, int y) {
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         gluLookAt(xe, ye, ze, xat, yat, zat, 0.0, 1.0, 0.0);
+        enlazar_matriz_camara(_cameras);
+        /*
         camera *newCamera = malloc(sizeof(camera));
-        glGetFloatv(GL_MODELVIEW_MATRIX, newCamera->camera_matrix.modelview);
+        glGetFloatv(GL_MODELVIEW_MATRIX, newCamera->camera_matrix->modelview);
         newCamera->next = _cameras;
         _cameras = newCamera;
         _selected_camera = newCamera;
         break;
+        */
     case 'm':
     case 'M':
         transformationType = TRANS_TRASLATE;
@@ -387,10 +398,10 @@ void keyboard(unsigned char key, int x, int y) {
     case 'Z':
         if(_selected_object != MURPHY)
         {
-            if(_selected_object->matrix_list->next != MURPHY)
+            if(_selected_object->modelview_list->next != MURPHY)
             {
-                matrix4 *aux =_selected_object->matrix_list;
-                _selected_object->matrix_list = aux->next;
+                modelview *aux =_selected_object->modelview_list;
+                _selected_object->modelview_list = aux->next;
 
                 free(aux);
             }
@@ -409,17 +420,27 @@ void keyboard(unsigned char key, int x, int y) {
 void specialKeyboard(int key, int x, int y)
 {
     glMatrixMode(GL_MODELVIEW);
-    if(referenceSystem == SYS_REF_LOCAL)
+    if(applyTransTo == OBJECT_TRANS)
     {
-        glLoadMatrixf(_selected_object->matrix_list->modelview);
-        aplicateTransformations(key);
-    } else {
-        glLoadIdentity();
-        aplicateTransformations(key);
-        glMultMatrixf(_selected_object->matrix_list->modelview);
+        if(referenceSystem == SYS_REF_LOCAL)
+        {
+            glLoadMatrixf(_selected_object->modelview_list->value);
+            aplicateTransformations(key);
+        } else {
+            glLoadIdentity();
+            aplicateTransformations(key);
+            glMultMatrixf(_selected_object->modelview_list->value);
+        }
+        enlazar_matriz_objeto(_selected_object);
+    } else if(applyTransTo == CAMERA_TRANS) {
+        if(referenceSystem == SYS_REF_LOCAL)
+        {
+            glLoadIdentity();
+            aplicateTransformations(key);
+            glMultMatrixf(_selected_camera->camera_matrix_list->value);
+        }
+        enlazar_matriz_camara(_selected_camera);
     }
-    enlazar_matriz(_selected_object);
-
     glutPostRedisplay();
 }
 
