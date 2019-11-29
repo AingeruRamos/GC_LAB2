@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "definitions.h"
 #include <GL/glut.h>
 #include <GL/gl.h>

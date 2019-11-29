@@ -145,7 +145,8 @@ struct object3d{
 
 typedef struct object3d object3d;
 
-struct camera{
+struct camera {
+    float x, y, z;
     modelview *camera_matrix_list;
     struct camera *next;
 };
