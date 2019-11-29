@@ -68,23 +68,27 @@ void display(void) {
     /* Define the projection */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-
-    /*When the window is wider than our original projection plane we extend the plane in the X axis*/
+    /*
+    /*When the window is wider than our original projection plane we extend the plane in the X axis
     if ((_ortho_x_max - _ortho_x_min) / (_ortho_y_max - _ortho_y_min) < _window_ratio) {
-        /* New width */
+        /* New width
         GLdouble wd = (_ortho_y_max - _ortho_y_min) * _window_ratio;
-        /* Midpoint in the X axis */
+        /* Midpoint in the X axis
         GLdouble midpt = (_ortho_x_min + _ortho_x_max) / 2;
-        /*Definition of the projection*/
+        /*Definition of the projection
         glOrtho(midpt - (wd / 2), midpt + (wd / 2), _ortho_y_min, _ortho_y_max, _ortho_z_min, _ortho_z_max);
-    } else {/* In the opposite situation we extend the Y axis */
-        /* New height */
+    } else {/* In the opposite situation we extend the Y axis
+        /* New height
         GLdouble he = (_ortho_x_max - _ortho_x_min) / _window_ratio;
-        /* Midpoint in the Y axis */
+        /* Midpoint in the Y axis
         GLdouble midpt = (_ortho_y_min + _ortho_y_max) / 2;
-        /*Definition of the projection*/
+        /*Definition of the projection
         glOrtho(_ortho_x_min, _ortho_x_max, midpt - (he / 2), midpt + (he / 2), _ortho_z_min, _ortho_z_max);
     }
+    */
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(-0.1, 0.1, -0.1, 0.1, 0.1, 1000);
 
     /* Now we start drawing the object */
     glMatrixMode(GL_MODELVIEW);
@@ -95,8 +99,9 @@ void display(void) {
 
     /*Now each of the objects in the list*/
     while (aux_obj != 0) {
-        glLoadMatrixf(aux_obj->modelview_list->value);
-        glMultMatrixf(_selected_camera->camera_matrix_list->value);
+        glLoadMatrixf(_selected_camera->camera_matrix_list->value);
+        glMultMatrixf(aux_obj->modelview_list->value);
+
         /* Select the color, depending on whether the current object is the selected one or not */
         if (aux_obj == _selected_object){
             glColor3f(KG_COL_SELECTED_R,KG_COL_SELECTED_G,KG_COL_SELECTED_B);

@@ -99,25 +99,6 @@ void enlazar_matriz_objeto(object3d *optr)
     optr->modelview_list = newModelView;
 }
 
-void matrizTraspuesta(GLfloat *matrixOrig)
-{
-    int i;
-    int j;
-    for(i=0; i<4; i++)
-    {
-        for(j=0; j<4; j++)
-        {
-            if(i != j)
-            {
-                float aux = matrixOrig[4*i+j];
-                matrixOrig[4*i+j] = matrixOrig[4*j+i];
-                matrixOrig[4*j+i] = aux;
-            }
-
-        }
-    }
-}
-
 void enlazar_matriz_camara(camera *cam)
 {
     modelview *newModelView = malloc(sizeof(modelview));
@@ -452,12 +433,18 @@ void specialKeyboard(int key, int x, int y)
         }
         enlazar_matriz_objeto(_selected_object);
     } else if(applyTransTo == CAMERA_TRANS) {
+        if(key == GLUT_KEY_RIGHT)
+        {
+            key = GLUT_KEY_LEFT;
+        } else if(key == GLUT_KEY_LEFT)
+        {
+            key = GLUT_KEY_RIGHT;
+        }
         if(referenceSystem == SYS_REF_LOCAL)
         {
-            glLoadMatrixf(_selected_camera->camera_matrix_list->value);
-            glTranslatef(-1*_selected_camera->x, -1*_selected_camera->y, -1*_selected_camera->z); 
+            glLoadIdentity();
             aplicateTransformations(key);
-            glTranslatef(_selected_camera->x, _selected_camera->y, _selected_camera->z);
+            glMultMatrixf(_selected_camera->camera_matrix_list->value);
         }
         enlazar_matriz_camara(_selected_camera);
     }
