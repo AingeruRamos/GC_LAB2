@@ -16,6 +16,8 @@ extern object3d *_selected_object;
 extern camera *_cameras;
 extern camera *_selected_camera;
 
+extern int projectionType;
+
 /**
  * @brief Function to draw the axes
  */
@@ -68,28 +70,31 @@ void display(void) {
     /* Define the projection */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    /*
-    /*When the window is wider than our original projection plane we extend the plane in the X axis
-    if ((_ortho_x_max - _ortho_x_min) / (_ortho_y_max - _ortho_y_min) < _window_ratio) {
-        /* New width
-        GLdouble wd = (_ortho_y_max - _ortho_y_min) * _window_ratio;
-        /* Midpoint in the X axis
-        GLdouble midpt = (_ortho_x_min + _ortho_x_max) / 2;
-        /*Definition of the projection
-        glOrtho(midpt - (wd / 2), midpt + (wd / 2), _ortho_y_min, _ortho_y_max, _ortho_z_min, _ortho_z_max);
-    } else {/* In the opposite situation we extend the Y axis
-        /* New height
-        GLdouble he = (_ortho_x_max - _ortho_x_min) / _window_ratio;
-        /* Midpoint in the Y axis
-        GLdouble midpt = (_ortho_y_min + _ortho_y_max) / 2;
-        /*Definition of the projection
-        glOrtho(_ortho_x_min, _ortho_x_max, midpt - (he / 2), midpt + (he / 2), _ortho_z_min, _ortho_z_max);
+    if(projectionType == 0)
+    {
+        /*When the window is wider than our original projection plane we extend the plane in the X axis*/
+        if ((_ortho_x_max - _ortho_x_min) / (_ortho_y_max - _ortho_y_min) < _window_ratio) {
+            /* New width*/
+            GLdouble wd = (_ortho_y_max - _ortho_y_min) * _window_ratio;
+            /* Midpoint in the X axis*/
+            GLdouble midpt = (_ortho_x_min + _ortho_x_max) / 2;
+            /*Definition of the projection*/
+            glOrtho(midpt - (wd / 2), midpt + (wd / 2), _ortho_y_min, _ortho_y_max, _ortho_z_min, _ortho_z_max);
+        } else {/* In the opposite situation we extend the Y axis*/
+            /* New height*/
+            GLdouble he = (_ortho_x_max - _ortho_x_min) / _window_ratio;
+            /* Midpoint in the Y axis*/
+            GLdouble midpt = (_ortho_y_min + _ortho_y_max) / 2;
+            /*Definition of the projection*/
+            glOrtho(_ortho_x_min, _ortho_x_max, midpt - (he / 2), midpt + (he / 2), _ortho_z_min, _ortho_z_max);
+        }
+    } else {
+        float x = _selected_camera->x;
+        float y = _selected_camera->y;
+        float near = _selected_camera->near;
+        float far = _selected_camera->far;
+        glFrustum(-1*x, x, -1*y, y, near, far);
     }
-    */
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glFrustum(-0.1, 0.1, -0.1, 0.1, 0.1, 1000);
-
     /* Now we start drawing the object */
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

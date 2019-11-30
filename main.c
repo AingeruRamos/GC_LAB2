@@ -17,6 +17,9 @@ object3d * _first_object= 0;                /*List of objects*/
 object3d * _selected_object = 0;            /*Object currently selected*/
 camera * _cameras = 0;
 camera *_selected_camera = 0;
+camera *objectCamera = 0;
+
+int projectionType = 1;
 
 /** GENERAL INITIALIZATION **/
 void initialization (){
@@ -38,17 +41,20 @@ void initialization (){
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     /*Inizialize camera */
+    camera *defaultCamera = malloc(sizeof(camera));
+    defaultCamera->x = 0.1;
+    defaultCamera->y = 0.1;
+    defaultCamera->near = 0.1;
+    defaultCamera->far = 1000; 
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-    camera *newCamera = malloc(sizeof(camera));
     modelview *newModelView = malloc(sizeof(modelview));
     glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->value);
-    newCamera->x = 1.0;
-    newCamera->y = 2.0;
-    newCamera->z = 5.0;
-    newCamera->camera_matrix_list = newModelView;
-    _cameras = newCamera;
+    defaultCamera->camera_matrix_list = newModelView;
+
+    _cameras = defaultCamera;
     _selected_camera = _cameras;
 }
 

@@ -5,20 +5,44 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <stdio.h>
+#include <math.h>
 
 extern object3d * _first_object;
 extern object3d * _selected_object;
 extern camera *_cameras;
 extern camera *_selected_camera;
+extern camera *objectCamera;
 
 extern GLdouble _ortho_x_min,_ortho_x_max;
 extern GLdouble _ortho_y_min,_ortho_y_max;
 extern GLdouble _ortho_z_min,_ortho_z_max;
 
+extern camera *objectCamera;
+extern int projectionType;
+
 char transformationType = TRANS_NULL;
 char referenceSystem = SYS_REF_LOCAL;
 char applyTransTo = OBJECT_TRANS;
 char printed = 0;
+
+/**
+ * @brief This function just prints information about the use
+ * of the keys
+ */
+void print_help(){
+    printf("KbG Irakasgaiaren Praktika. Programa honek 3D objektuak \n");
+    printf("aldatzen eta bistaratzen ditu.  \n\n");
+    printf("\n\n");
+    printf("FUNTZIO NAGUSIAK \n");
+    printf("<?>\t\t Laguntza hau bistaratu \n");
+    printf("<ESC>\t\t Programatik irten \n");
+    printf("<F>\t\t Objektua bat kargatu\n");
+    printf("<TAB>\t\t Kargaturiko objektuen artean bat hautatu\n");
+    printf("<DEL>\t\t Hautatutako objektua ezabatu\n");
+    printf("<CTRL + ->\t Bistaratze-eremua handitu\n");
+    printf("<CTRL + +>\t Bistaratze-eremua txikitu\n");
+    printf("\n\n");
+}
 
 void imprimir_configuracion() {
     if(printed == 1)
@@ -59,25 +83,6 @@ void imprimir_configuracion() {
     printed = 1;
 }
 
-/**
- * @brief This function just prints information about the use
- * of the keys
- */
-void print_help(){
-    printf("KbG Irakasgaiaren Praktika. Programa honek 3D objektuak \n");
-    printf("aldatzen eta bistaratzen ditu.  \n\n");
-    printf("\n\n");
-    printf("FUNTZIO NAGUSIAK \n");
-    printf("<?>\t\t Laguntza hau bistaratu \n");
-    printf("<ESC>\t\t Programatik irten \n");
-    printf("<F>\t\t Objektua bat kargatu\n");
-    printf("<TAB>\t\t Kargaturiko objektuen artean bat hautatu\n");
-    printf("<DEL>\t\t Hautatutako objektua ezabatu\n");
-    printf("<CTRL + ->\t Bistaratze-eremua handitu\n");
-    printf("<CTRL + +>\t Bistaratze-eremua txikitu\n");
-    printf("\n\n");
-}
-
 void liberar(object3d *optr)
 {
     int i;
@@ -107,6 +112,53 @@ void enlazar_matriz_camara(camera *cam)
     cam->camera_matrix_list = newModelView;
 }
 
+void* getSelectedObjectPosition(GLfloat *resultMatrix) 
+{
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(_selected_object->modelview_list->value);
+    GLfloat m[16];
+    for(int i=0; i<4; i++) {
+        for(int j=0; j< 4; j++) {
+            if(i == 0) {
+                m[4*i + j] = 1;
+            } else {
+                m[4*i+j] = 0;
+            }
+        }
+    }
+    glMultMatrixf(m);
+    glGetFloatv(GL_MODELVIEW_MATRIX, m);
+    for(int i=0; i<4; i++)
+    {
+        for(int j=0; j<4; j++)
+        {
+            resultMatrix[4*i+j] = m[4*i+j];
+        }
+    }
+    resultMatrix[0] -= 1;
+    resultMatrix[1] -= 1;
+    resultMatrix[2] -= 1;
+}
+
+camera* createNewCamera(float xe, float ye, float ze, float xat, float yat, float zat)
+{
+    camera *newCamera = malloc(sizeof(camera));
+    newCamera->xPos = xe;
+    newCamera->yPos = ye;
+    newCamera->zPos = ze;
+    newCamera->x = 0.1;
+    newCamera->y = 0.1;
+    newCamera->near = 0.1;
+    newCamera->far = 1000; 
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(xe, ye, ze, xat, yat, zat, 0.0, 1.0, 0.0);
+    modelview *newModelView = malloc(sizeof(modelview));
+    glGetFloatv(GL_MODELVIEW_MATRIX, newModelView->value);
+    newCamera->camera_matrix_list = newModelView;
+    return newCamera;
+}
+
 void aplicateTransformations(int key)
 {
     float xTrans = 0;
@@ -121,51 +173,83 @@ void aplicateTransformations(int key)
     float yScal = 1;
     float zScal = 1;
 
+    float xCamera = 0;
+    float yCamera = 0;
+    float dNearFar = 0;
+
     if(key == GLUT_KEY_UP) //Trasladar +Y; Escalar + Y; Rotar +X
     {
         yTrans = KG_STEP_MOVE;
         xRot = 1;
         yScal = 2;
+        yCamera = 0.1;
     } else if(key == GLUT_KEY_DOWN) { //Trasladar -Y; Escalar - Y; Rotar -X
         yTrans = -1*KG_STEP_MOVE;
         xRot = -1;
         yScal = 0.5;
+        yCamera = -0.1;
     } else if(key == GLUT_KEY_RIGHT) { //Trasladar +X; Escalar + X; Rotar +Y
         xTrans = KG_STEP_MOVE;
         yRot = 1;
         xScal = 2;
+        xCamera = 0.1;
     } else if(key == GLUT_KEY_LEFT) { //Trasladar -X; Escalar - X; Rotar -Y
         xTrans = -1*KG_STEP_MOVE;
         yRot = -1;
         xScal = 0.5;
+        xCamera = -0.1;
     } else if(key == GLUT_KEY_PAGE_UP) { //Trasladar +Z; Escalar + Z; Rotar +Z
         zTrans = KG_STEP_MOVE;
         zRot = 1;
         zScal = 2;
+        dNearFar = 0.1;
     } else if(key == GLUT_KEY_PAGE_DOWN) { //Trasladar -Z; Escalar - Z; Rotar -Z
         zTrans = -1*KG_STEP_MOVE;
         zRot = -1;
         zScal = 0.5;
+        dNearFar = -0.1;
     } else if(key == '+') {
         xScal = 2;
         yScal = 2;
         zScal = 2;
+        xCamera = -0.1;
+        yCamera = -0.1;
     } else if(key == '-') {
         xScal = 0.5;
         yScal = 0.5;
         zScal = 0.5;
+        xCamera = 0.1;
+        yCamera = 0.1;
     }
-    if(transformationType == TRANS_TRASLATE)
-    {
-        glTranslatef(xTrans, yTrans, zTrans); 
-    } else if(transformationType == TRANS_ROTATE) {
-        glRotatef(KG_STEP_ROTATE, xRot, yRot, zRot); 
-    } else if(transformationType == TRANS_SCALE) {
-        glScalef(xScal, yScal, zScal);
+
+    if(applyTransTo == OBJECT_TRANS) {
+        if(transformationType == TRANS_TRASLATE)
+        {
+            glTranslatef(xTrans, yTrans, zTrans); 
+        } else if(transformationType == TRANS_ROTATE) {
+            glRotatef(KG_STEP_ROTATE, xRot, yRot, zRot); 
+        } else if(transformationType == TRANS_SCALE) {
+            glScalef(xScal, yScal, zScal);
+        }
+    } else if(applyTransTo == CAMERA_TRANS) {
+        if(referenceSystem == SYS_REF_LOCAL)
+        {
+            if(transformationType == TRANS_TRASLATE)
+            {
+                glTranslatef(-1*xTrans, -1*yTrans, zTrans);
+            } else if(transformationType == TRANS_ROTATE) {
+                glRotatef(KG_STEP_ROTATE, -1*xRot, yRot, zRot);
+            } else if(transformationType == TRANS_SCALE) {
+                _selected_camera->x += xCamera;
+                _selected_camera->y += yCamera;
+                _selected_camera->near += dNearFar;
+                _selected_camera->far += dNearFar;
+            }
+        } else {
+            glRotatef(KG_STEP_ROTATE, -1*xRot, -1*yRot, zRot);
+        }
     }
 }
-
-//glGetFloat(GL_MODEL_VIEW_MATRIX, *puntero_en_donde_guardar)
 
 /**
  * @brief Callback function to control the basic keys
@@ -325,18 +409,40 @@ void keyboard(unsigned char key, int x, int y) {
         printf("\ty: "); scanf("%f", &yat);
         float zat;
         printf("\tz: "); scanf("%f", &zat);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        gluLookAt(xe, ye, ze, xat, yat, zat, 0.0, 1.0, 0.0);
-        enlazar_matriz_camara(_cameras);
-        /*
-        camera *newCamera = malloc(sizeof(camera));
-        glGetFloatv(GL_MODELVIEW_MATRIX, newCamera->camera_matrix->modelview);
+
+        camera *newCamera = createNewCamera(xe, ye, ze, xat, yat, zat);
         newCamera->next = _cameras;
         _cameras = newCamera;
-        _selected_camera = newCamera;
+        _selected_camera = _cameras;
+
+        printf("La camara se ha creado con exito\n");
         break;
-        */
+    
+    case 'c':
+        if(objectCamera == 0)
+        {
+            if(_selected_camera->next == 0)
+            {
+                _selected_camera = _cameras;
+            } else {
+                _selected_camera = _selected_camera->next;
+            }
+        } else {
+            _selected_camera = _cameras;
+        }
+        break;
+    
+    case 'C':
+        break;
+        
+    case 'p':
+        if(projectionType == 0)
+        {
+            projectionType = 1;
+        } else {
+            projectionType = 0;
+        }
+        break;
     case 'm':
     case 'M':
         transformationType = TRANS_TRASLATE;
@@ -358,6 +464,16 @@ void keyboard(unsigned char key, int x, int y) {
     case 'g':
     case 'G':
         referenceSystem = SYS_REF_GLOBAL;
+        if(applyTransTo == CAMERA_TRANS)
+        {
+            GLfloat pos[16];
+            getSelectedObjectPosition(pos);
+            camera *newCamera = createNewCamera(pos[0], pos[1], (pos[2]+10), pos[0], pos[1], pos[2]);
+            newCamera->next = _cameras;
+            _cameras = newCamera;
+            _selected_camera = _cameras;
+
+        }
         imprimir_configuracion();
         break;
 
@@ -402,7 +518,6 @@ void keyboard(unsigned char key, int x, int y) {
             {
                 modelview *aux =_selected_object->modelview_list;
                 _selected_object->modelview_list = aux->next;
-
                 free(aux);
             }
         }
@@ -433,19 +548,29 @@ void specialKeyboard(int key, int x, int y)
         }
         enlazar_matriz_objeto(_selected_object);
     } else if(applyTransTo == CAMERA_TRANS) {
-        if(key == GLUT_KEY_RIGHT)
-        {
-            key = GLUT_KEY_LEFT;
-        } else if(key == GLUT_KEY_LEFT)
-        {
-            key = GLUT_KEY_RIGHT;
-        }
         if(referenceSystem == SYS_REF_LOCAL)
         {
             glLoadIdentity();
             aplicateTransformations(key);
             glMultMatrixf(_selected_camera->camera_matrix_list->value);
+        } /*else {
+            
+            glLoadIdentity();
+            GLfloat at[16];
+            getSelectedObjectPosition(at);
+            float dx = _selected_camera->xPos - at[0];
+            dx *= dx;
+            float dy = _selected_camera->yPos - at[1];
+            dy *= dy;
+            float dz = _selected_camera->zPos - at[2];
+            dz *= dz;
+            float d = sqrt(dx + dy + dz);
+            glTranslatef(0, 0, -1*d);
+            aplicateTransformations(key);
+            glTranslatef(0, 0, d);
+            glMultMatrixf(_selected_camera->camera_matrix_list->value);
         }
+        */
         enlazar_matriz_camara(_selected_camera);
     }
     glutPostRedisplay();

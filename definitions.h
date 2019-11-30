@@ -146,7 +146,8 @@ struct object3d{
 typedef struct object3d object3d;
 
 struct camera {
-    float x, y, z;
+    float xPos, yPos, zPos;
+    float x, y, near, far;
     modelview *camera_matrix_list;
     struct camera *next;
 };
