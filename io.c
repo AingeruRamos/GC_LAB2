@@ -112,10 +112,10 @@ void enlazar_matriz_camara(camera *cam)
     cam->camera_matrix_list = newModelView;
 }
 
-void* getSelectedObjectPosition(GLfloat *resultMatrix) 
+void* getPosotionInSpace(GLfloat *modelview, GLfloat *resultMatrix) 
 {
     glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(_selected_object->modelview_list->value);
+    glLoadMatrixf(modelview);
     GLfloat m[16];
     for(int i=0; i<4; i++) {
         for(int j=0; j< 4; j++) {
@@ -143,9 +143,6 @@ void* getSelectedObjectPosition(GLfloat *resultMatrix)
 camera* createNewCamera(float xe, float ye, float ze, float xat, float yat, float zat)
 {
     camera *newCamera = malloc(sizeof(camera));
-    newCamera->xPos = xe;
-    newCamera->yPos = ye;
-    newCamera->zPos = ze;
     newCamera->x = 0.1;
     newCamera->y = 0.1;
     newCamera->near = 0.1;
@@ -245,8 +242,8 @@ void aplicateTransformations(int key)
                 _selected_camera->near += dNearFar;
                 _selected_camera->far += dNearFar;
             }
-        } else {
-            glRotatef(KG_STEP_ROTATE, -1*xRot, -1*yRot, zRot);
+        } else if(referenceSystem == SYS_REF_GLOBAL) {
+            glRotatef(KG_STEP_ROTATE, -1*xRot, yRot, zRot);
         }
     }
 }
@@ -466,13 +463,12 @@ void keyboard(unsigned char key, int x, int y) {
         referenceSystem = SYS_REF_GLOBAL;
         if(applyTransTo == CAMERA_TRANS)
         {
-            GLfloat pos[16];
-            getSelectedObjectPosition(pos);
-            camera *newCamera = createNewCamera(pos[0], pos[1], (pos[2]+10), pos[0], pos[1], pos[2]);
-            newCamera->next = _cameras;
-            _cameras = newCamera;
-            _selected_camera = _cameras;
-
+            GLfloat oPos[16];
+            GLfloat cPos[16];
+            getPosotionInSpace(_selected_object->modelview_list->value, oPos);
+            getPosotionInSpace(_selected_camera->camera_matrix_list->value, cPos);
+            camera *newCamera = createNewCamera(-1*cPos[0], -1*cPos[1], -1*cPos[2], oPos[0], oPos[1], oPos[2]);
+            _selected_camera->camera_matrix_list = newCamera->camera_matrix_list;
         }
         imprimir_configuracion();
         break;
@@ -553,24 +549,21 @@ void specialKeyboard(int key, int x, int y)
             glLoadIdentity();
             aplicateTransformations(key);
             glMultMatrixf(_selected_camera->camera_matrix_list->value);
-        } /*else {
-            
+        } else {
+            /*
             glLoadIdentity();
-            GLfloat at[16];
-            getSelectedObjectPosition(at);
-            float dx = _selected_camera->xPos - at[0];
-            dx *= dx;
-            float dy = _selected_camera->yPos - at[1];
-            dy *= dy;
-            float dz = _selected_camera->zPos - at[2];
-            dz *= dz;
-            float d = sqrt(dx + dy + dz);
+            //Calcular distancia euclidea
+            GLfloat oPos[16];
+            GLfloat cPos[16];
+            getPosotionInSpace(_selected_object->modelview_list->value, oPos);
+            getPosotionInSpace(_selected_camera->camera_matrix_list->value, cPos);
+            float d = sqrt(pow(cPos[0]-oPos[0], 2) + pow(cPos[1]-oPos[1], 2) + pow(cPos[2]-oPos[2], 2));
             glTranslatef(0, 0, -1*d);
             aplicateTransformations(key);
             glTranslatef(0, 0, d);
             glMultMatrixf(_selected_camera->camera_matrix_list->value);
+            */
         }
-        */
         enlazar_matriz_camara(_selected_camera);
     }
     glutPostRedisplay();
