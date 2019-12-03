@@ -83,6 +83,73 @@ void imprimir_configuracion() {
     printed = 1;
 }
 
+void calcularVectoresNormales(object3d *optr)
+{
+    //Inicilaiza los vectores normales de los vertices
+    vertex *vertexes = optr->vertex_table;
+    int i, j;
+    for(i=0; i<optr->num_vertices; i++)
+    {
+        vertexes->normalVector[0] = 0;
+        vertexes->normalVector[0] = 0;
+        vertexes->normalVector[0] = 0;
+        vertexes->normalVector[0] = 0;
+        vertexes++;
+    }
+    //Calcula los vectores normales de cada cara y lo suma a todos sus vertices
+    for(i=0; i<optr->num_faces; i++)
+    {
+        face *faceptr = optr->face_table;
+        point3 points[3];
+        GLint *index = faceptr->vertex_table;
+        for(j=0; j<3; j++)
+        {
+            points[j] = optr->vertex_table[*index].coord;
+            index++;
+        }
+        GLfloat v1[4];
+        v1[0] = points[1].x - points[0].x;
+        v1[1] = points[1].y - points[0].y;
+        v1[2] = points[1].z - points[0].z;
+        v1[3] = 1;
+        GLfloat v2[4];
+        v2[0] = points[2].x - points[0].x;
+        v2[1] = points[2].y - points[0].y;
+        v2[2] = points[2].z - points[0].z;
+        v2[3] = 1;
+        faceptr->normalVector[0] = v1[1]*v2[2] - v1[2]*v2[1];
+        faceptr->normalVector[1] = v1[2]*v2[0] - v1[0]*v2[2];
+        faceptr->normalVector[2] = v1[0]*v2[1] - v1[1]*v2[0];
+        faceptr->normalVector[3] = 1;
+
+        //Suma a cada vertice del poligono su vector normal
+        index = faceptr->vertex_table;
+        for(j=0; j<3; j++)
+        {
+            optr->vertex_table[*index].normalVector[0] += faceptr->normalVector[0];
+            optr->vertex_table[*index].normalVector[0] += faceptr->normalVector[1];
+            optr->vertex_table[*index].normalVector[0] += faceptr->normalVector[2];
+            optr->vertex_table[*index].normalVector[0] += faceptr->normalVector[3];
+            index++;
+        }
+    }
+    //Hacer unitarios los vectores normales de los vertices
+    vertexes = optr->vertex_table;
+    for(i=0; i<optr->num_vertices; i++)
+    {
+        float dx = pow(vertexes->normalVector[0],2);
+        float dy = pow(vertexes->normalVector[0],2);
+        float dz = pow(vertexes->normalVector[0],2);
+        float dc = 1;
+        float modulo = sqrt(dx + dy +dz + dc);
+        vertexes->normalVector[0] /= modulo;
+        vertexes->normalVector[1] = modulo;
+        vertexes->normalVector[2] = modulo;
+        vertexes->normalVector[3] = modulo;
+        vertexes++;
+    }
+}
+
 void liberar(object3d *optr)
 {
     int i;

@@ -65,7 +65,7 @@ void display(void) {
     object3d *aux_obj = _first_object;
 
     /* Clear the screen */
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     /* Define the projection */
     glMatrixMode(GL_PROJECTION);
@@ -129,5 +129,5 @@ void display(void) {
         aux_obj = aux_obj->next;
     }
     /*Do the actual drawing*/
-    glFlush();
+    glutSwapBuffers();
 }
