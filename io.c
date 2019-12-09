@@ -82,7 +82,7 @@ void imprimir_configuracion() {
     printf("--------------------------------------\n");
     printed = 1;
 }
-
+/*THIS IS A GOOD SHIT */
 void calcularVectoresNormales(object3d *optr)
 {
     //Inicilaiza los vectores normales de los vertices
@@ -357,6 +357,7 @@ void keyboard(unsigned char key, int x, int y) {
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
             enlazar_matriz_objeto(_selected_object);
+            calcularVectoresNormales(_selected_object);
             printf("%s\n",KG_MSSG_FILEREAD);
             printed = 0;
             imprimir_configuracion();

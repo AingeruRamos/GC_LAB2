@@ -99,9 +99,20 @@ void display(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    GLfloat mat_specular[] = { 0.727811, 0.626959, 0.626959, 0.5 };
+    GLfloat mat_shininess[] = { 0.6 };
+    GLfloat light_position[] = { 0.0, 3.0, 0.0, 0.0 };
+
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
     /*First, we draw the axes*/
     draw_axes();
-
+    int p = 0;
     /*Now each of the objects in the list*/
     while (aux_obj != 0) {
         glLoadMatrixf(_selected_camera->camera_matrix_list->value);
@@ -117,6 +128,20 @@ void display(void) {
         /* Draw the object; for each face create a new polygon with the corresponding vertices */
         //glLoadIdentity();
         for (f = 0; f < aux_obj->num_faces; f++) {
+            /*ESTO TAMBIEN */
+            GLfloat normal[3];
+            if(p == 0) {
+                normal[0] = 0;
+                normal[1] = 1;
+                normal[2] = 0;
+                p = 1;
+            } else {
+                normal[0] = 0;
+                normal[1] = -1;
+                normal[2] = 0;
+                p = 0;
+            }
+            glNormal3fv(normal);
             glBegin(GL_POLYGON);
             for (v = 0; v < aux_obj->face_table[f].num_vertices; v++) {
                 v_index = aux_obj->face_table[f].vertex_table[v];
