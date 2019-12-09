@@ -103,7 +103,7 @@ typedef struct {
 typedef struct {
     point3 coord;                       /* coordinates,x, y, z */
     GLint num_faces;                    /* number of faces that share this vertex */
-    GLfloat normalVector[4];
+    GLfloat normalVector[3];
 } vertex;
 
 /****************************

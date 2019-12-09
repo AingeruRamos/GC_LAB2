@@ -128,9 +128,8 @@ void display(void) {
         /* Draw the object; for each face create a new polygon with the corresponding vertices */
         //glLoadIdentity();
         for (f = 0; f < aux_obj->num_faces; f++) {
-            /*ESTO TAMBIEN */
             GLfloat normal[3];
-            if(p == 0) {
+            if(p == 0) { /*Esto era para ver como funcionaban los vectores normales con la iluminación */
                 normal[0] = 0;
                 normal[1] = 1;
                 normal[2] = 0;
