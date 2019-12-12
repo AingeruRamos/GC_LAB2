@@ -20,6 +20,7 @@ camera *_selected_camera = 0;
 camera *objectCamera = 0;
 
 int projectionType = 1;
+int lightingState = LIGHT_ON;
 
 /** GENERAL INITIALIZATION **/
 void initialization (){
@@ -39,6 +40,7 @@ void initialization (){
 
     /*Definition of the method to draw the objects*/
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glEnable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_FLAT);
 

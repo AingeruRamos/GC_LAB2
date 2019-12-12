@@ -19,6 +19,7 @@ extern GLdouble _ortho_z_min,_ortho_z_max;
 
 extern camera *objectCamera;
 extern int projectionType;
+extern int lightingState;
 
 char transformationType = TRANS_NULL;
 char referenceSystem = SYS_REF_LOCAL;
@@ -82,14 +83,13 @@ void imprimir_configuracion() {
     printf("--------------------------------------\n");
     printed = 1;
 }
-/*THIS IS A GOOD SHIT */
+
 void calcularVectoresNormales(object3d *optr)
 {
     int i, j;
-    //Calcula los vectores normales de cada cara y lo suma a todos sus vertices
+    face *faceptr = optr->face_table;
     for(i=0; i<optr->num_faces; i++)
     {
-        face *faceptr = optr->face_table;
         point3 points[3];
         GLint *index = faceptr->vertex_table;
         for(j=0; j<3; j++)
@@ -101,15 +101,30 @@ void calcularVectoresNormales(object3d *optr)
         v1[0] = points[1].x - points[0].x;
         v1[1] = points[1].y - points[0].y;
         v1[2] = points[1].z - points[0].z;
+
         GLfloat v2[3];
         v2[0] = points[2].x - points[0].x;
         v2[1] = points[2].y - points[0].y;
         v2[2] = points[2].z - points[0].z;
+        
         faceptr->normalVector[0] = v1[1]*v2[2] - v1[2]*v2[1];
+        float dx = faceptr->normalVector[0] * faceptr->normalVector[0];
+        
         faceptr->normalVector[1] = v1[2]*v2[0] - v1[0]*v2[2];
+        float dy = faceptr->normalVector[1] * faceptr->normalVector[1];
+        
         faceptr->normalVector[2] = v1[0]*v2[1] - v1[1]*v2[0];
+        float dz = faceptr->normalVector[2] * faceptr->normalVector[2];
+        
+        //Hacer unitarios los vectores normales de los vertices
+        float module = sqrt(dx+dy+dz);
+        faceptr->normalVector[0] /= module;
+        faceptr->normalVector[1] /= module;
+        faceptr->normalVector[2] /= module;
+
+        //Siguiente cara
+        faceptr++;
     }
-    //Hacer unitarios los vectores normales de los vertices
 }
 
 void liberar(object3d *optr)
@@ -558,43 +573,65 @@ void keyboard(unsigned char key, int x, int y) {
     glutPostRedisplay();
 }
 
-void specialKeyboard(int key, int x, int y)
+int lightControl(int key)
 {
-    glMatrixMode(GL_MODELVIEW);
-    if(applyTransTo == OBJECT_TRANS)
+    int aplicated = 0;
+    if(key == GLUT_KEY_F9)
+    {   
+        if(lightingState == LIGHT_ON)
+        {
+            glDisable(GL_LIGHTING);
+            lightingState = LIGHT_OFF;
+        } else {
+            glEnable(GL_LIGHTING);
+            lightingState = LIGHT_ON;
+        }
+        aplicated = 1;
+    }
+    return aplicated;
+}
+void specialKeyboard(int key, int x, int y)
+{   
+    int b = lightControl(key);
+    if(b == 0)
     {
-        if(referenceSystem == SYS_REF_LOCAL)
+        glMatrixMode(GL_MODELVIEW);
+        if(applyTransTo == OBJECT_TRANS)
         {
-            glLoadMatrixf(_selected_object->modelview_list->value);
-            aplicateTransformations(key);
-        } else {
-            glLoadIdentity();
-            aplicateTransformations(key);
-            glMultMatrixf(_selected_object->modelview_list->value);
+            if(referenceSystem == SYS_REF_LOCAL)
+            {
+                glLoadMatrixf(_selected_object->modelview_list->value);
+                aplicateTransformations(key);
+            } else {
+                glLoadIdentity();
+                aplicateTransformations(key);
+                glMultMatrixf(_selected_object->modelview_list->value);
+            }
+            calcularVectoresNormales(_selected_object);
+            enlazar_matriz_objeto(_selected_object);
+        } else if(applyTransTo == CAMERA_TRANS) {
+            if(referenceSystem == SYS_REF_LOCAL)
+            {
+                glLoadIdentity();
+                aplicateTransformations(key);
+                glMultMatrixf(_selected_camera->camera_matrix_list->value);
+            } else {
+                /*
+                glLoadIdentity();
+                //Calcular distancia euclidea
+                GLfloat oPos[16];
+                GLfloat cPos[16];
+                getPosotionInSpace(_selected_object->modelview_list->value, oPos);
+                getPosotionInSpace(_selected_camera->camera_matrix_list->value, cPos);
+                float d = sqrt(pow(cPos[0]-oPos[0], 2) + pow(cPos[1]-oPos[1], 2) + pow(cPos[2]-oPos[2], 2));
+                glTranslatef(0, 0, -1*d);
+                aplicateTransformations(key);
+                glTranslatef(0, 0, d);
+                glMultMatrixf(_selected_camera->camera_matrix_list->value);
+                */
+            }
+            enlazar_matriz_camara(_selected_camera);
         }
-        enlazar_matriz_objeto(_selected_object);
-    } else if(applyTransTo == CAMERA_TRANS) {
-        if(referenceSystem == SYS_REF_LOCAL)
-        {
-            glLoadIdentity();
-            aplicateTransformations(key);
-            glMultMatrixf(_selected_camera->camera_matrix_list->value);
-        } else {
-            /*
-            glLoadIdentity();
-            //Calcular distancia euclidea
-            GLfloat oPos[16];
-            GLfloat cPos[16];
-            getPosotionInSpace(_selected_object->modelview_list->value, oPos);
-            getPosotionInSpace(_selected_camera->camera_matrix_list->value, cPos);
-            float d = sqrt(pow(cPos[0]-oPos[0], 2) + pow(cPos[1]-oPos[1], 2) + pow(cPos[2]-oPos[2], 2));
-            glTranslatef(0, 0, -1*d);
-            aplicateTransformations(key);
-            glTranslatef(0, 0, d);
-            glMultMatrixf(_selected_camera->camera_matrix_list->value);
-            */
-        }
-        enlazar_matriz_camara(_selected_camera);
     }
     glutPostRedisplay();
 }

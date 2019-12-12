@@ -68,6 +68,9 @@
 #define CAMERA_TRANS                        2
 #define LIGHT_TRANS                         3
 
+#define LIGHT_ON                            1
+#define LIGHT_OFF                           0
+
 #define MURPHY                              0
 
 /** STRUCTURES **/
@@ -114,7 +117,7 @@ typedef struct {
 typedef struct {
     GLint num_vertices;                 /* number of vertices in the face */
     GLint *vertex_table;                /* table with the index of each vertex */
-    GLfloat normalVector[4];
+    GLfloat normalVector[3];
 } face;
 
 /****************************
@@ -154,5 +157,14 @@ struct camera {
 };
 
 typedef struct camera camera;
+
+struct light {
+    int state;
+    int type;
+    float aperture;
+    modelview *modelview;
+};
+
+typedef struct light light;
 
 #endif // DEFINITIONS_H

@@ -99,15 +99,18 @@ void display(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    GLfloat mat_specular[] = { 0.727811, 0.626959, 0.626959, 0.5 };
-    GLfloat mat_shininess[] = { 0.6 };
-    GLfloat light_position[] = { 0.0, 3.0, 0.0, 0.0 };
+    float ambient[] = {0.2125, 0.1275, 0.054, 1.0};
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+    float diffuse[] = {0.714, 0.4284, 0.18144};
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+    float specular[] = {0.393548, 0.271906, 0.166721};
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+    float shine = 0.2;
+    glMaterialf(GL_FRONT, GL_SHININESS, shine * 128.0);
 
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+    float light_position[] = {2, 5, 0};
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-    glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
 
     /*First, we draw the axes*/
@@ -127,20 +130,9 @@ void display(void) {
 
         /* Draw the object; for each face create a new polygon with the corresponding vertices */
         //glLoadIdentity();
+        face *faceptr = _selected_object->face_table;
         for (f = 0; f < aux_obj->num_faces; f++) {
-            GLfloat normal[3];
-            if(p == 0) { /*Esto era para ver como funcionaban los vectores normales con la iluminación */
-                normal[0] = 0;
-                normal[1] = 1;
-                normal[2] = 0;
-                p = 1;
-            } else {
-                normal[0] = 0;
-                normal[1] = -1;
-                normal[2] = 0;
-                p = 0;
-            }
-            glNormal3fv(normal);
+            glNormal3fv(faceptr->normalVector);
             glBegin(GL_POLYGON);
             for (v = 0; v < aux_obj->face_table[f].num_vertices; v++) {
                 v_index = aux_obj->face_table[f].vertex_table[v];
@@ -149,6 +141,7 @@ void display(void) {
                         aux_obj->vertex_table[v_index].coord.z);
             }
             glEnd();
+            faceptr++;
         }
         aux_obj = aux_obj->next;
     }
